@@ -1,4 +1,4 @@
-{% from "consul/map.jinja" import consul with context %}
+{% from slspath+"/map.jinja" import consul with context %}
 
 consul-dep-unzip:
   pkg.installed:
@@ -13,7 +13,7 @@ consul-bin-dir:
 consul-user:
   group.present:
     - name: consul
-  user.present: 
+  user.present:
     - name: consul
     - createhome: false
     - system: true
@@ -29,30 +29,24 @@ consul-config-dir:
     - user: consul
     - group: consul
 
-consul-runtime-dir:
-  file.directory:
-    - name: /var/consul
-    - user: consul
-    - group: consul
-
 consul-data-dir:
   file.directory:
-    - name: /usr/local/share/consul
+    - name: {{ consul.config.data_dir }}
     - user: consul
     - group: consul
-    - makedirs:
+    - makedirs: True
 
 # Install agent
 consul-download:
   file.managed:
-    - name: /tmp/consul_{{ consul.version }}_linux_amd64.zip
-    - source: https://releases.hashicorp.com/consul/{{ consul.version }}/consul_{{ consul.version }}_linux_amd64.zip
-    - source_hash: sha256={{ consul.hash }}
+    - name: /tmp/consul_{{ consul.version }}_linux_{{ consul.arch }}.zip
+    - source: https://{{ consul.download_host }}/consul/{{ consul.version }}/consul_{{ consul.version }}_linux_{{ consul.arch }}.zip
+    - source_hash: https://releases.hashicorp.com/consul/{{ consul.version }}/consul_{{ consul.version }}_SHA256SUMS
     - unless: test -f /usr/local/bin/consul-{{ consul.version }}
 
 consul-extract:
   cmd.wait:
-    - name: unzip /tmp/consul_{{ consul.version }}_linux_amd64.zip -d /tmp
+    - name: unzip /tmp/consul_{{ consul.version }}_linux_{{ consul.arch }}.zip -d /tmp
     - watch:
       - file: consul-download
 
@@ -67,7 +61,7 @@ consul-install:
 
 consul-clean:
   file.absent:
-    - name: /tmp/consul_{{ consul.version }}_linux_amd64.zip
+    - name: /tmp/consul_{{ consul.version }}_linux_{{ consul.arch }}.zip
     - watch:
       - file: consul-install
 
