@@ -2,6 +2,13 @@ consul:
   # Start Consul agent service and enable it at boot time
   service: True
 
+  # Set user and group for Consul config files and running service
+  user: consul
+  group: consul
+
+  version: 0.7.0
+  download_host: releases.hashicorp.com
+
   config:
     server: True
     bind_addr: 0.0.0.0
@@ -18,6 +25,10 @@ consul:
       - 1.1.1.1
       - 2.2.2.2
 
+    ui: true
+    log_level: info
+    data_dir: /var/consul
+
   register:
     - name: Redis
       checks:
@@ -26,6 +37,8 @@ consul:
   scripts:
     - source: salt://files/consul/check_redis.py
       name: /usr/local/share/consul/check_redis.py
+      context:
+        port: 6379
 
 consul_template:
   # Start consul-template daemon and enable it at boot time
